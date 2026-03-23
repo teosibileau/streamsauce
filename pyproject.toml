@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "streamsauce"
+version = "0.1.0"
+description = ""
+authors = ["Teofilo Sibileau <teo.sibileau@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+packages = [
+    { include = "app" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.12.3"
+dbos = "^1.8.0"
+colorlog = "^6.8.2"
+uvicorn = {extras = ["standard"], version = "^0.24.0"}
+python-dotenv = "^1.1.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+ipdb = "^0.13.13"
+ipython = "^9.5.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

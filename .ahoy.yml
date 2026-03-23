@@ -1,0 +1,15 @@
+ahoyapi: v2
+usage: Streamsauce commands
+commands:
+  docker:
+    usage: Run docker-compose commands
+    imports:
+      - .ahoy/docker.ahoy.yml
+  dbos:
+    usage: Run dbos commands
+    imports:
+      - .ahoy/dbos.ahoy.yml
+  setup:
+    usage: Setup commands
+    imports:
+      - .ahoy/setup.ahoy.yml

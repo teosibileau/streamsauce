@@ -1,0 +1,17 @@
+---
+ahoyapi: v2
+commands:
+  ctl:
+    usage: Access to dbos tool
+    cmd: |
+      poetry run dbos $@
+
+  help:
+    usage: Show help for dbos commands
+    cmd: |
+      ahoy dbos ctl --help
+
+  start:
+    usage: Start the dbos service
+    cmd: |
+      poetry run python -m app.main
