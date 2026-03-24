@@ -1,0 +1,18 @@
+---
+ahoyapi: v2
+commands:
+  install:
+    usage: Install dependencies
+    cmd: |
+      poetry install
+
+  precommit:
+    usage: Setup pre-commit hooks
+    cmd: |
+      if git config --unset-all core.hooksPath; then \
+        echo "Unset core.hooksPath"; \
+      else \
+        echo "core.hooksPath was not set"; \
+      fi
+      rm -rf .git/hooks
+      pre-commit install
