@@ -16,6 +16,7 @@ dbos = "^1.8.0"
 colorlog = "^6.8.2"
 uvicorn = {extras = ["standard"], version = "^0.24.0"}
 python-dotenv = "^1.1.1"
+aio-pika = "^9.6.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
