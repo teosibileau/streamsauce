@@ -45,7 +45,7 @@ commands:
   compose:
     usage: Abstraction for docker-compose
     cmd: |
-      docker-compose -f docker-compose.yml --env-file=.env $COMPOSE_FLAGS -p "${PWD##*/}" $@
+      docker-compose -f docker-compose.yml $COMPOSE_FLAGS -p "${PWD##*/}" $@
   cleanup:
     usage: Clean ups docker unused images and volumes.
     cmd: |

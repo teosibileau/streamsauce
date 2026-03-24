@@ -1,5 +1,6 @@
 ahoyapi: v2
 usage: Streamsauce commands
+env: .env
 commands:
   docker:
     usage: Run docker-compose commands
