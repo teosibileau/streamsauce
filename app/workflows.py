@@ -41,15 +41,19 @@ def log_snapshot(
     segment_epoch: int,
 ) -> dict:
     logger.info(
-        "Processing snapshot: camera=%s epoch=%d url=%s",
+        "Processing snapshot: camera=%s epoch=%d url=%s segment_url=%s segment_epoch=%d",
         camera_id,
         snapshot_epoch,
         snapshot_url,
+        segment_url,
+        segment_epoch,
     )
     return {
         "camera_id": camera_id,
         "snapshot_epoch": snapshot_epoch,
         "status": "received",
+        "segment_url": segment_url,
+        "segment_epoch": segment_epoch,
     }
 
 
