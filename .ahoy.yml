@@ -14,10 +14,10 @@ commands:
     usage: Setup commands
     imports:
       - .ahoy/setup.ahoy.yml
-  up:
-    usage: Start services by profile
+  profile:
+    usage: Append profiles to docker commands
     imports:
-      - .ahoy/up.ahoy.yml
+      - .ahoy/profile.ahoy.yml
   stream:
     usage: Stream a video file from input/ to mediamtx in a loop (e.g. ahoy stream people_walking.mp4)
     cmd: |

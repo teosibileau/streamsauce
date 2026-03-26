@@ -4,8 +4,6 @@ services:
     image: postgres:15
     container_name: dbos_postgres
     restart: unless-stopped
-    profiles:
-      - main
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-dbos}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dbos}
@@ -18,9 +16,6 @@ services:
   broker:
     image: rabbitmq:4-management-alpine
     restart: unless-stopped
-    profiles:
-      - main
-      - chop
     environment:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
