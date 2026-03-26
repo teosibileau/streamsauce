@@ -14,3 +14,6 @@ commands:
     usage: Setup commands
     imports:
       - .ahoy/setup.ahoy.yml
+  clean:
+    usage: Remove all jpg, ts, and m3u8 files from output directories
+    cmd: "find output -type f \\( -name '*.jpg' -o -name '*.ts' -o -name '*.m3u8' \\) -delete"
