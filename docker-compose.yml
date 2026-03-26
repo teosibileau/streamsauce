@@ -68,5 +68,15 @@ services:
     volumes:
       - ./output:/usr/share/nginx/html:ro
 
+  cam:
+    image: bluenviron/mediamtx:latest
+    restart: unless-stopped
+    profiles:
+      - input
+    environment:
+      - MTX_PROTOCOLS=tcp
+    ports:
+      - "8554:8554"
+
 volumes:
   dbos_pg_data:
