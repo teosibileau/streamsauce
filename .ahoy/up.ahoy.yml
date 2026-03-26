@@ -1,0 +1,19 @@
+---
+ahoyapi: v2
+commands:
+  main:
+    usage: Start main services (postgres, broker)
+    cmd: |
+      COMPOSE_PROFILES=main ahoy docker compose up
+  chop:
+    usage: Start chop services (chopper, emitter, nginx, broker)
+    cmd: |
+      COMPOSE_PROFILES=chop ahoy docker compose up
+  input:
+    usage: Start input services (mediamtx)
+    cmd: |
+      COMPOSE_PROFILES=input ahoy docker compose up
+  all:
+    usage: Start all services
+    cmd: |
+      COMPOSE_PROFILES=main,chop,input ahoy docker compose up

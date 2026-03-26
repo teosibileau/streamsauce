@@ -4,6 +4,8 @@ services:
     image: postgres:15
     container_name: dbos_postgres
     restart: unless-stopped
+    profiles:
+      - main
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-dbos}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dbos}
@@ -16,6 +18,9 @@ services:
   broker:
     image: rabbitmq:4-management-alpine
     restart: unless-stopped
+    profiles:
+      - main
+      - chop
     environment:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
@@ -29,6 +34,8 @@ services:
   chopper:
     image: ghcr.io/teosibileau/streamchop/chopper:v0.1.1
     restart: unless-stopped
+    profiles:
+      - chop
     environment:
       - RTSP_URL=${CAM1_RTSP_URL}
     volumes:
@@ -37,6 +44,8 @@ services:
   emitter:
     image: ghcr.io/teosibileau/streamchop/emitter:v0.1.1
     restart: unless-stopped
+    profiles:
+      - chop
     environment:
       - MQTT_HOST=${MQTT_HOST}
       - MQTT_PORT=${MQTT_PORT:-1883}
@@ -52,6 +61,8 @@ services:
   nginx:
     image: ghcr.io/teosibileau/streamchop/nginx:v0.1.1
     restart: unless-stopped
+    profiles:
+      - chop
     ports:
       - "8080:80"
     volumes:
