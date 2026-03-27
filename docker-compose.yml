@@ -13,5 +13,66 @@ services:
     volumes:
       - dbos_pg_data:/var/lib/postgresql/data
 
+  broker:
+    image: rabbitmq:4-management-alpine
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "5672:5672"
+      - "1883:1883"
+      - "15672:15672"
+    command: >
+      sh -c "rabbitmq-plugins enable rabbitmq_mqtt --offline &&
+      rabbitmq-server"
+
+  chopper:
+    image: ghcr.io/teosibileau/streamchop/chopper:v0.1.2
+    restart: unless-stopped
+    profiles:
+      - chop
+    environment:
+      - RTSP_URL=${CAM1_RTSP_URL}
+    volumes:
+      - ./output/cam1:/output
+
+  emitter:
+    image: ghcr.io/teosibileau/streamchop/emitter:v0.1.2
+    restart: unless-stopped
+    profiles:
+      - chop
+    environment:
+      - MQTT_HOST=${MQTT_HOST}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+      - MQTT_TOPIC_PREFIX=${MQTT_TOPIC_PREFIX:-streamchop}
+      - HLS_BASE_URL=${HLS_BASE_URL}
+      - WATCH_DIR=/output
+      - RUST_LOG=debug
+    volumes:
+      - ./output:/output:ro
+    depends_on:
+      - broker
+
+  nginx:
+    image: ghcr.io/teosibileau/streamchop/nginx:v0.1.2
+    restart: unless-stopped
+    profiles:
+      - chop
+    ports:
+      - "8080:80"
+    volumes:
+      - ./output:/usr/share/nginx/html:ro
+
+  cam:
+    image: bluenviron/mediamtx:latest
+    restart: unless-stopped
+    profiles:
+      - input
+    environment:
+      - MTX_PROTOCOLS=tcp
+    ports:
+      - "8554:8554"
+
 volumes:
   dbos_pg_data:

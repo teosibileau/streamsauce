@@ -1,5 +1,6 @@
 import logging
 import os
+from dataclasses import dataclass, field
 
 import colorlog
 from dbos import DBOSConfig
@@ -15,8 +16,40 @@ dbos_config: DBOSConfig = {
     ),
 }
 
+
+# AMQP Configuration
+@dataclass(frozen=True)
+class AMQPConfig:
+    host: str
+    port: int
+    username: str
+    password: str
+    exchange: str
+    queue_name: str
+    routing_keys: list[str] = field(default_factory=list)
+    prefetch_count: int = 10
+
+    @property
+    def url(self) -> str:
+        return f"amqp://{self.username}:{self.password}@{self.host}:{self.port}/"  # noqa: E231
+
+
+amqp_config = AMQPConfig(
+    host=os.environ.get("AMQP_HOST", "broker"),
+    port=int(os.environ.get("AMQP_PORT", "5672")),
+    username=os.environ.get("AMQP_USERNAME", "guest"),
+    password=os.environ.get("AMQP_PASSWORD", "guest"),
+    exchange=os.environ.get("AMQP_EXCHANGE", "amq.topic"),
+    queue_name=os.environ.get("AMQP_QUEUE", "streamsauce.cv"),
+    routing_keys=os.environ.get(
+        "AMQP_ROUTING_KEYS", "streamchop.*.snapshot,streamchop.*.segment"
+    ).split(","),
+    prefetch_count=int(os.environ.get("AMQP_PREFETCH", "10")),
+)
+
+
 # Logging Setup
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)
 
 handler = logging.StreamHandler()

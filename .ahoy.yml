@@ -1,5 +1,6 @@
 ahoyapi: v2
 usage: Streamsauce commands
+env: .env
 commands:
   docker:
     usage: Run docker-compose commands
@@ -13,3 +14,30 @@ commands:
     usage: Setup commands
     imports:
       - .ahoy/setup.ahoy.yml
+  profile:
+    usage: Append profiles to docker commands
+    imports:
+      - .ahoy/profile.ahoy.yml
+  stream:
+    usage: Stream a video file from input/ to mediamtx in a loop (e.g. ahoy stream people_walking.mp4)
+    cmd: |
+      FILE="$1"
+      if [ -z "$FILE" ]; then
+        FILES=($(ls input/*.mp4 input/*.mkv input/*.avi input/*.ts 2>/dev/null))
+        if [ ${#FILES[@]} -eq 0 ]; then
+          echo "No video files found in input/"
+          exit 1
+        fi
+        echo "Select a video file:"
+        select F in "${FILES[@]}"; do
+          if [ -n "$F" ]; then
+            FILE=$(basename "$F")
+            break
+          fi
+        done
+      fi
+      docker run --rm --network host -v $(pwd)/input:/input:ro linuxserver/ffmpeg -re -stream_loop -1 -i /input/$FILE -c:v libx264 -preset ultrafast -tune zerolatency -c:a aac -f rtsp -rtsp_transport tcp rtsp://0.0.0.0:8554/cam1
+  clean:
+    usage: Remove all jpg, ts, and m3u8 files from output directories
+    cmd: |
+      find output -type f -name '*.jpg' -o -name '*.ts' -o -name '*.m3u8' | xargs rm -f

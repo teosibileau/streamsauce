@@ -1,0 +1,11 @@
+---
+ahoyapi: v2
+commands:
+  chop:
+    usage: Start chop services (chopper, emitter, nginx, broker)
+    cmd: |
+      COMPOSE_PROFILES="chop,${COMPOSE_PROFILES}" ahoy $@
+  input:
+    usage: Start input services (mediamtx)
+    cmd: |
+      COMPOSE_PROFILES="input,${COMPOSE_PROFILES}" ahoy $@
