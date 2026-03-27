@@ -21,13 +21,25 @@ class AMQPConsumer:
         self._channel: aio_pika.Channel | None = None
 
     async def start(self) -> None:
+        logger.info(
+            "Connecting to AMQP at %s",
+            self.config.url.replace(self.config.password, "***"),
+        )
         self._connection = await aio_pika.connect_robust(self.config.url)
+        logger.info("AMQP connected")
         self._channel = await self._connection.channel()
         await self._channel.set_qos(prefetch_count=self.config.prefetch_count)
 
         exchange = await self._channel.get_exchange(self.config.exchange)
+        logger.info("Using exchange: %s", self.config.exchange)
 
         queue = await self._channel.declare_queue(self.config.queue_name, durable=True)
+        logger.info(
+            "Declared queue: %s (messages: %d, consumers: %d)",
+            queue.name,
+            queue.declaration_result.message_count,
+            queue.declaration_result.consumer_count,
+        )
 
         for rk in self.config.routing_keys:
             await queue.bind(exchange, routing_key=rk)

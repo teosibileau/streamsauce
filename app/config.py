@@ -49,7 +49,7 @@ amqp_config = AMQPConfig(
 
 
 # Logging Setup
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)
 
 handler = logging.StreamHandler()
