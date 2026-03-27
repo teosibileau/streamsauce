@@ -28,7 +28,7 @@ services:
       rabbitmq-server"
 
   chopper:
-    image: ghcr.io/teosibileau/streamchop/chopper:v0.1.1
+    image: ghcr.io/teosibileau/streamchop/chopper:v0.1.2
     restart: unless-stopped
     profiles:
       - chop
@@ -38,7 +38,7 @@ services:
       - ./output/cam1:/output
 
   emitter:
-    image: ghcr.io/teosibileau/streamchop/emitter:v0.1.1
+    image: ghcr.io/teosibileau/streamchop/emitter:v0.1.2
     restart: unless-stopped
     profiles:
       - chop
@@ -48,14 +48,14 @@ services:
       - MQTT_TOPIC_PREFIX=${MQTT_TOPIC_PREFIX:-streamchop}
       - HLS_BASE_URL=${HLS_BASE_URL}
       - WATCH_DIR=/output
-      - RUST_LOG=info
+      - RUST_LOG=debug
     volumes:
       - ./output:/output:ro
     depends_on:
       - broker
 
   nginx:
-    image: ghcr.io/teosibileau/streamchop/nginx:v0.1.1
+    image: ghcr.io/teosibileau/streamchop/nginx:v0.1.2
     restart: unless-stopped
     profiles:
       - chop
