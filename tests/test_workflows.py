@@ -15,6 +15,8 @@ def test_log_snapshot_returns_expected_dict():
         "camera_id": "cam1",
         "snapshot_epoch": 1711195203,
         "status": "received",
+        "segment_url": "http://nginx/cam1/seg.ts",
+        "segment_epoch": 1711195200,
     }
 
 
