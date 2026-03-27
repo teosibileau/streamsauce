@@ -17,12 +17,17 @@ colorlog = "^6.8.2"
 uvicorn = {extras = ["standard"], version = "^0.24.0"}
 python-dotenv = "^1.1.1"
 aio-pika = "^9.6.2"
+onnxruntime = "^1.18.0"
+supervision = "^0.25.0"
+numpy = "^2.1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
 ipdb = "^0.13.13"
 ipython = "^9.5.0"
 pytest-asyncio = ">=0.23,<1"
+ultralytics = "^8.3.0"
+typer = "^0.15.0"
 
 [build-system]
 requires = ["poetry-core"]
