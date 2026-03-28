@@ -3,7 +3,7 @@
 from dbos import DBOS
 
 from .events import SnapshotEvent
-from .steps import annotate_snapshot, detect_objects, log_snapshot
+from .steps import annotate_snapshot, detect_objects, log_snapshot, persist_detection
 
 
 @DBOS.workflow()
@@ -24,6 +24,8 @@ def process_snapshot(
 
     if not detection_result:
         return {**log_result, "detections": detection_result}
+
+    persist_detection(camera_id, snapshot_epoch, detection_result)
 
     annotate_result = annotate_snapshot(
         snapshot_url, camera_id, snapshot_epoch, detection_result

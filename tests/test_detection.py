@@ -110,6 +110,44 @@ def test_detect_objects_empty_detections(mock_requests, mock_get_detector):
     assert result is None
 
 
+def test_persist_detection_step_is_dbos_step():
+    from app.pipelines.snapshot.steps import persist_detection
+
+    assert hasattr(persist_detection, "dbos_function_name")
+
+
+def test_persist_detection_writes_json(tmp_path):
+    from app.pipelines.snapshot.steps import persist_detection
+
+    detection_result = {
+        "count": 1,
+        "xyxy": [[10, 20, 100, 200]],
+        "confidence": [0.95],
+        "class_id": [0],
+        "class_names": ["person"],
+        "camera_id": "cam1",
+        "snapshot_epoch": 123456,
+        "detection_epoch": 123459,
+        "detection_latency": 3,
+    }
+
+    with patch("app.pipelines.snapshot.steps.Path") as mock_path_cls:
+        mock_path = MagicMock()
+        mock_path_cls.return_value.__truediv__ = lambda s, x: mock_path
+        mock_path.__truediv__ = lambda s, x: mock_path
+        mock_path.mkdir = MagicMock()
+        mock_path.write_text = MagicMock()
+
+        result = persist_detection("cam1", 123456, detection_result)
+
+    assert "detection_json" in result
+    mock_path.write_text.assert_called_once()
+    import json
+
+    written = mock_path.write_text.call_args[0][0]
+    assert json.loads(written) == detection_result
+
+
 @patch("app.pipelines.snapshot.steps.cv2.imwrite")
 @patch("app.pipelines.snapshot.steps.requests")
 def test_annotate_snapshot_saves_image(mock_requests, mock_imwrite, tmp_path):

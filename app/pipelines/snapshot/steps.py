@@ -1,5 +1,6 @@
 """DBOS steps for the snapshot pipeline."""
 
+import json
 import logging
 import time
 from pathlib import Path
@@ -108,6 +109,25 @@ def detect_objects(
         latency,
     )
     return result
+
+
+@DBOS.step()
+def persist_detection(
+    camera_id: str,
+    snapshot_epoch: int,
+    detection_result: dict,
+) -> dict:
+    output_dir = Path("output/annotations") / camera_id
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / f"{snapshot_epoch}.json"
+    output_path.write_text(json.dumps(detection_result))
+    logger.info(
+        "Detection persisted: camera=%s epoch=%d path=%s",
+        camera_id,
+        snapshot_epoch,
+        output_path,
+    )
+    return {"detection_json": str(output_path)}
 
 
 @DBOS.step()
