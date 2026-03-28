@@ -1,6 +1,9 @@
 """Tests for DBOS workflows and steps."""
 
-from app.workflows import log_segment, log_snapshot, process_segment, process_snapshot
+from app.pipelines.segment.steps import log_segment
+from app.pipelines.segment.workflow import process_segment
+from app.pipelines.snapshot.steps import log_snapshot
+from app.pipelines.snapshot.workflow import process_snapshot
 
 
 def test_log_snapshot_returns_expected_dict():
