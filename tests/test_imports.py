@@ -21,6 +21,10 @@ def test_import_main():
     import app.main  # noqa: F401
 
 
+def test_import_snapshot_events():
+    import app.pipelines.snapshot.events  # noqa: F401
+
+
 def test_import_snapshot_steps():
     import app.pipelines.snapshot.steps  # noqa: F401
 
