@@ -35,7 +35,7 @@ services:
     environment:
       - RTSP_URL=${CAM1_RTSP_URL}
     volumes:
-      - ./output/cam1:/output
+      - ./output/chopper/cam1:/output
 
   emitter:
     image: ghcr.io/teosibileau/streamchop/emitter:v0.1.2
@@ -50,7 +50,7 @@ services:
       - WATCH_DIR=/output
       - RUST_LOG=debug
     volumes:
-      - ./output:/output:ro
+      - ./output/chopper:/output:ro
     depends_on:
       - broker
 
@@ -62,7 +62,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./output:/usr/share/nginx/html:ro
+      - ./output/chopper:/usr/share/nginx/html:ro
 
   cam:
     image: bluenviron/mediamtx:latest

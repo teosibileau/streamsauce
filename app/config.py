@@ -48,6 +48,23 @@ amqp_config = AMQPConfig(
 )
 
 
+# ONNX Configuration
+@dataclass(frozen=True)
+class OnnxConfig:
+    model_path: str
+    execution_provider: str
+    confidence_threshold: float
+
+
+onnx_config = OnnxConfig(
+    model_path=os.environ.get("ONNX_MODEL_PATH", ".data/yolo11n.onnx"),
+    execution_provider=os.environ.get(
+        "ONNX_EXECUTION_PROVIDER", "CPUExecutionProvider"
+    ),
+    confidence_threshold=float(os.environ.get("ONNX_CONFIDENCE_THRESHOLD", "0.25")),
+)
+
+
 # Logging Setup
 logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)

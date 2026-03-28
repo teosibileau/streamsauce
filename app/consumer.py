@@ -8,8 +8,9 @@ from aio_pika.abc import AbstractIncomingMessage
 from dbos import DBOS, SetWorkflowID
 
 from .config import AMQPConfig
+from .pipelines.segment.workflow import process_segment
+from .pipelines.snapshot.workflow import process_snapshot
 from .schemas import SegmentEvent, SnapshotEvent, parse_routing_key
-from .workflows import process_segment, process_snapshot
 
 logger = logging.getLogger(__name__)
 

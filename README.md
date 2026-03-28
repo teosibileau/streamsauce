@@ -24,20 +24,66 @@ Edge (streamchop)          Cloud (streamsauce)
 - **RabbitMQ** with the MQTT plugin bridges MQTT messages to the `amq.topic` AMQP exchange, converting topic separators from `/` to `.` (e.g., `streamchop/cam1/snapshot` becomes `streamchop.cam1.snapshot`).
 - **Streamsauce** binds a durable queue to the exchange, consumes events, and dispatches DBOS workflows. Workflow IDs are derived from `{camera_id}-{event_type}-{epoch}`, ensuring exactly-once processing even if messages are replayed.
 
+## Snapshot Detection Pipeline
+
+When a snapshot event arrives, the workflow runs the following steps:
+
+```
+log_snapshot -> detect_objects -> persist_detection -> annotate_snapshot
+```
+
+1. **log_snapshot** - Logs receipt of the snapshot event
+2. **detect_objects** - Downloads the JPEG, runs YOLO inference via ONNX Runtime, returns detection results (bounding boxes, classes, confidences, latency). Returns `None` if nothing detected, short-circuiting the pipeline.
+3. **persist_detection** - Saves detection results as JSON to `output/annotations/{camera_id}/{epoch}.json`
+4. **annotate_snapshot** - Downloads the JPEG, draws bounding boxes and labels using supervision, saves annotated image to `output/annotations/{camera_id}/{epoch}.jpg`
+
+Each step emits a DBOS event (`SNAPSHOT_RECEIVED`, `DETECTION_COMPLETE`, `ANNOTATION_SAVED`) that external consumers can subscribe to via `DBOS.get_event()`.
+
+### Detection Stack
+
+- **ONNX Runtime** for inference (CoreML on Mac, CUDA on NVIDIA GPUs)
+- **supervision** (MIT) for postprocessing (NMS, class filtering, annotation)
+- **YOLO model** exported to `.onnx` format (export is a dev-only step using ultralytics)
+- Target COCO classes: person, car, motorcycle, bus, truck, and animals (bird through giraffe)
+
+### Model Export
+
+Export a YOLO model to ONNX format for use by the detection engine:
+
+```bash
+ahoy setup export-model                        # Default: yolo11n
+ahoy setup export-model -- --model yolo11s     # Specify model variant
+ahoy setup export-model -- --force             # Overwrite existing
+```
+
+The `.onnx` file is saved to `.data/` and is not tracked in git.
+
 ## Project Structure
 
 ```
 app/
-  main.py         # FastAPI + DBOS + consumer lifecycle (lifespan)
-  config.py       # DBOS and AMQP configuration from env vars
-  consumer.py     # AMQPConsumer class (aio-pika, message dispatch)
-  schemas.py      # Pydantic models for snapshot/segment events
-  workflows.py    # DBOS workflows and steps
-  api.py          # REST endpoints (health, workflow list/detail)
-tests/            # Unit tests for all modules
+  main.py                           # FastAPI + DBOS + consumer lifecycle
+  config.py                         # DBOS, AMQP, and ONNX configuration
+  consumer.py                       # AMQPConsumer class (aio-pika, message dispatch)
+  schemas.py                        # Pydantic models for snapshot/segment events
+  api.py                            # REST endpoints (health, workflow list/detail)
+  detection/
+    engine.py                       # OnnxDetector class (singleton, lazy init)
+  pipelines/
+    snapshot/
+      workflow.py                   # process_snapshot (DBOS workflow)
+      steps.py                      # log, detect, persist, annotate (DBOS steps)
+      events.py                     # SnapshotEvent enum
+    segment/
+      workflow.py                   # process_segment (DBOS workflow)
+      steps.py                      # log_segment (DBOS step)
+scripts/
+  export_model.py                   # Typer CLI for YOLO -> ONNX export
+tests/                              # Unit tests for all modules
+.data/                              # Model weights and ONNX exports (gitignored)
 docker-compose.yml
-.ahoy.yml         # Ahoy command helpers
-.env.example      # Environment variable template
+.ahoy.yml                           # Ahoy command helpers
+.env.example                        # Environment variable template
 ```
 
 ## Getting Started
@@ -54,6 +100,7 @@ docker-compose.yml
 ```bash
 cp .env.example .env          # Configure environment variables
 ahoy setup install            # Install Python dependencies (or: poetry install)
+ahoy setup export-model       # Export YOLO model to ONNX
 ahoy docker compose up        # Start postgres + broker
 ahoy dbos start               # Start the application
 ```
@@ -76,9 +123,9 @@ These services simulate the streamchop edge pipeline for development without rea
 | Service   | Image                                           | Ports | Description                                                  |
 |-----------|-------------------------------------------------|-------|--------------------------------------------------------------|
 | `cam`     | `bluenviron/mediamtx:latest`                    | 8554  | MediaMTX RTSP server. Accepts video streams to simulate a camera source |
-| `chopper` | `ghcr.io/teosibileau/streamchop/chopper:v0.1.1` | -     | Connects to an RTSP source, chops into HLS segments + snapshots |
-| `emitter` | `ghcr.io/teosibileau/streamchop/emitter:v0.1.1` | -     | Watches output directory, publishes segment/snapshot events to MQTT |
-| `nginx`   | `ghcr.io/teosibileau/streamchop/nginx:v0.1.1`   | 8080  | Serves HLS files and snapshots over HTTP                      |
+| `chopper` | `ghcr.io/teosibileau/streamchop/chopper:v0.1.2` | -     | Connects to an RTSP source, chops into HLS segments + snapshots. Outputs to `output/chopper/cam1/` |
+| `emitter` | `ghcr.io/teosibileau/streamchop/emitter:v0.1.2` | -     | Watches `output/chopper/`, publishes segment/snapshot events to MQTT |
+| `nginx`   | `ghcr.io/teosibileau/streamchop/nginx:v0.1.2`   | 8080  | Serves HLS files and snapshots from `output/chopper/` over HTTP |
 
 ## Docker Profiles
 
@@ -86,22 +133,34 @@ Services are organized into profiles to start only what you need:
 
 | Profile | Services                            | Use case                        |
 |---------|-------------------------------------|---------------------------------|
-| `main`  | postgres, broker                    | Run the application             |
 | `chop`  | chopper, emitter, nginx, broker     | Streamchop edge pipeline        |
 | `input` | cam (mediamtx)                      | Simulated camera input          |
 
 Use the `ahoy profile` command to compose profiles:
 
 ```bash
-ahoy profile chop docker compose up     # Start chop services
-ahoy profile input docker compose up    # Start mediamtx
+ahoy profile chop docker up     # Start chop services
+ahoy profile input docker up    # Start mediamtx
 ```
 
 Or combine them:
 
 ```bash
-ahoy profile chop profile input docker compose up   # Start chop + input
+ahoy profile chop profile input docker up   # Start chop + input
 ```
+
+Or use all:
+```bash
+ahoy profile all docker up
+```
+
+
+## Output Directories
+
+| Directory | Contents | Written by |
+|-----------|----------|------------|
+| `output/chopper/{camera_id}/` | HLS segments (.ts), playlists (.m3u8), snapshots (.jpg) | streamchop chopper |
+| `output/annotations/{camera_id}/` | Annotated JPEGs and detection JSON | streamsauce pipeline |
 
 ## Ahoy Commands
 
@@ -109,12 +168,25 @@ ahoy profile chop profile input docker compose up   # Start chop + input
 |--------------------------------|-------------------------------------------------------|
 | `ahoy docker compose up`      | Start core services (postgres + broker)               |
 | `ahoy dbos start`             | Start the streamsauce application                     |
+| `ahoy setup install`          | Install Python dependencies via Poetry                |
+| `ahoy setup export-model`     | Export YOLO model to ONNX format                      |
 | `ahoy stream <file>`          | Stream a video from `input/` to mediamtx in a loop    |
 | `ahoy stream`                 | Interactive menu to select a video file                |
 | `ahoy clean`                  | Remove generated jpg, ts, and m3u8 files from output  |
 | `ahoy docker log <service>`   | Tail logs for a docker service                        |
 | `ahoy docker ps`              | List running containers                               |
-| `ahoy setup install`          | Install Python dependencies via Poetry                |
+
+## Environment Variables
+
+### ONNX Detection
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ONNX_MODEL_PATH` | `.data/yolo11n.onnx` | Path to the ONNX model file |
+| `ONNX_EXECUTION_PROVIDER` | `CPUExecutionProvider` | ONNX Runtime provider (`CPUExecutionProvider`, `CoreMLExecutionProvider`, `CUDAExecutionProvider`) |
+| `ONNX_CONFIDENCE_THRESHOLD` | `0.25` | Minimum confidence score for detections |
+
+See `.env.example` for all available environment variables.
 
 ## Simulating Camera Input
 

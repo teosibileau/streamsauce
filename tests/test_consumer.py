@@ -8,7 +8,8 @@ import pytest
 
 from app.config import AMQPConfig
 from app.consumer import AMQPConsumer
-from app.workflows import process_segment, process_snapshot
+from app.pipelines.segment.workflow import process_segment
+from app.pipelines.snapshot.workflow import process_snapshot
 
 SNAPSHOT_BODY = {
     "camera_id": "cam1",

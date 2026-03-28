@@ -6,6 +6,11 @@ commands:
     cmd: |
       poetry install
 
+  export-model:
+    usage: Export YOLO model to ONNX format (e.g. ahoy setup export-model -- --model yolo11n)
+    cmd: |
+      poetry run python scripts/export_model.py $@
+
   precommit:
     usage: Setup pre-commit hooks
     cmd: |
