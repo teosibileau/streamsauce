@@ -1,6 +1,7 @@
 """DBOS steps for the snapshot pipeline."""
 
 import logging
+import time
 from pathlib import Path
 
 import cv2
@@ -83,6 +84,9 @@ def detect_objects(
         )
         return None
 
+    detection_epoch = int(time.time())
+    latency = detection_epoch - snapshot_epoch
+
     result = {
         "count": len(detections),
         "xyxy": detections.xyxy.tolist(),
@@ -93,12 +97,15 @@ def detect_objects(
         ],
         "camera_id": camera_id,
         "snapshot_epoch": snapshot_epoch,
+        "detection_epoch": detection_epoch,
+        "detection_latency": latency,
     }
     logger.info(
-        "Detection complete: camera=%s epoch=%d objects=%d",
+        "Detection complete: camera=%s epoch=%d objects=%d latency=%ds",
         camera_id,
         snapshot_epoch,
         result["count"],
+        latency,
     )
     return result
 

@@ -65,6 +65,33 @@ def test_detect_objects_returns_expected_structure(mock_requests, mock_get_detec
     assert len(result["xyxy"]) == 1
     assert len(result["confidence"]) == 1
     assert len(result["class_id"]) == 1
+    assert "detection_epoch" in result
+    assert "detection_latency" in result
+    assert isinstance(result["detection_epoch"], int)
+    assert isinstance(result["detection_latency"], int)
+
+
+@patch("app.pipelines.snapshot.steps.time")
+@patch("app.pipelines.snapshot.steps.get_detector")
+@patch("app.pipelines.snapshot.steps.requests")
+def test_detect_objects_latency(mock_requests, mock_get_detector, mock_time):
+    from app.pipelines.snapshot.steps import detect_objects
+
+    mock_requests.get.return_value = _mock_requests_get(_make_fake_jpeg())
+
+    mock_detector = MagicMock()
+    mock_detector.detect.return_value = sv.Detections(
+        xyxy=np.array([[10, 20, 100, 200]], dtype=np.float32),
+        confidence=np.array([0.95], dtype=np.float32),
+        class_id=np.array([0], dtype=np.int32),
+    )
+    mock_get_detector.return_value = mock_detector
+    mock_time.time.return_value = 123459.0
+
+    result = detect_objects("http://fake/snap.jpg", "cam1", 123456)
+
+    assert result["detection_epoch"] == 123459
+    assert result["detection_latency"] == 3
 
 
 @patch("app.pipelines.snapshot.steps.get_detector")
