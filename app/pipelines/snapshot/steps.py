@@ -6,16 +6,12 @@ from pathlib import Path
 import cv2
 import numpy as np
 import requests
-import requests_cache
 import supervision as sv
-import tenacity
 from dbos import DBOS
 
 from app.detection.engine import get_detector
 
 logger = logging.getLogger(__name__)
-
-requests_cache.install_cache("snapshot_cache", backend="memory", expire_after=60)
 
 COCO_CLASS_NAMES = {
     0: "person",
@@ -40,10 +36,6 @@ box_annotator = sv.BoxAnnotator()
 label_annotator = sv.LabelAnnotator()
 
 
-@tenacity.retry(
-    stop=tenacity.stop_after_attempt(3),
-    wait=tenacity.wait_exponential(),
-)
 def _download_image(url: str) -> np.ndarray:
     response = requests.get(url)
     response.raise_for_status()
