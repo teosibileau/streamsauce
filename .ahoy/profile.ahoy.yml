@@ -1,6 +1,10 @@
 ---
 ahoyapi: v2
 commands:
+  all:
+    usage: Start all services
+    cmd: |
+      COMPOSE_PROFILES="chop,input" ahoy $@
   chop:
     usage: Start chop services (chopper, emitter, nginx, broker)
     cmd: |
