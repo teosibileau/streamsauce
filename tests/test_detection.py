@@ -80,9 +80,7 @@ def test_detect_objects_empty_detections(mock_requests, mock_get_detector):
 
     result = detect_objects("http://fake/snap.jpg", "cam1", 123456)
 
-    assert result["count"] == 0
-    assert result["xyxy"] == []
-    assert result["class_names"] == []
+    assert result is None
 
 
 @patch("app.pipelines.snapshot.steps.cv2.imwrite")

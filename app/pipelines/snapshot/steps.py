@@ -75,18 +75,21 @@ def detect_objects(
     detector = get_detector()
     detections = detector.detect(image)
 
+    if len(detections) == 0:
+        logger.info(
+            "No detections: camera=%s epoch=%d",
+            camera_id,
+            snapshot_epoch,
+        )
+        return None
+
     result = {
         "count": len(detections),
         "xyxy": detections.xyxy.tolist(),
-        "confidence": (
-            detections.confidence.tolist() if detections.confidence is not None else []
-        ),
-        "class_id": (
-            detections.class_id.tolist() if detections.class_id is not None else []
-        ),
+        "confidence": detections.confidence.tolist(),
+        "class_id": detections.class_id.tolist(),
         "class_names": [
-            COCO_CLASS_NAMES.get(cid, str(cid))
-            for cid in (detections.class_id if detections.class_id is not None else [])
+            COCO_CLASS_NAMES.get(cid, str(cid)) for cid in detections.class_id
         ],
         "camera_id": camera_id,
         "snapshot_epoch": snapshot_epoch,

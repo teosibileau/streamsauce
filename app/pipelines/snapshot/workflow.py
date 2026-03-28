@@ -22,6 +22,9 @@ def process_snapshot(
     detection_result = detect_objects(snapshot_url, camera_id, snapshot_epoch)
     DBOS.set_event(SnapshotEvent.DETECTION_COMPLETE, detection_result)
 
+    if not detection_result:
+        return {**log_result, "detections": detection_result}
+
     annotate_result = annotate_snapshot(
         snapshot_url, camera_id, snapshot_epoch, detection_result
     )

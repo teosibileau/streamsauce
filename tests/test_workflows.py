@@ -84,6 +84,26 @@ def test_process_snapshot_returns_log_and_detections(
     assert result["detections"]["class_names"] == ["person", "car"]
 
 
+@patch("app.pipelines.snapshot.workflow.DBOS")
+@patch("app.pipelines.snapshot.workflow.annotate_snapshot")
+@patch("app.pipelines.snapshot.workflow.detect_objects")
+@patch("app.pipelines.snapshot.workflow.log_snapshot")
+def test_process_snapshot_skips_annotation_when_no_detections(
+    mock_log, mock_detect, mock_annotate, mock_dbos
+):
+    mock_log.return_value = {"camera_id": "cam1", "status": "received"}
+    mock_detect.return_value = None
+
+    result = process_snapshot.__wrapped__(
+        "cam1", "http://x/snap.jpg", 123, "http://x/seg.ts", 100
+    )
+
+    assert result is not None
+    assert result["detections"] is None
+    assert result["camera_id"] == "cam1"
+    mock_annotate.assert_not_called()
+
+
 def test_snapshot_event_enum_values():
     from app.pipelines.snapshot.events import SnapshotEvent
 
