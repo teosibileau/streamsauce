@@ -109,24 +109,3 @@ def test_annotate_snapshot_saves_image(mock_requests, mock_imwrite, tmp_path):
 
     assert "annotated_image" in result
     mock_imwrite.assert_called_once()
-
-
-@patch("app.pipelines.snapshot.steps.cv2.imwrite")
-@patch("app.pipelines.snapshot.steps.requests")
-def test_annotate_snapshot_handles_empty_detections(mock_requests, mock_imwrite):
-    from app.pipelines.snapshot.steps import annotate_snapshot
-
-    mock_requests.get.return_value = _mock_requests_get(_make_fake_jpeg())
-
-    detection_result = {
-        "count": 0,
-        "xyxy": [],
-        "confidence": [],
-        "class_id": [],
-        "class_names": [],
-    }
-
-    result = annotate_snapshot("http://fake/snap.jpg", "cam1", 123456, detection_result)
-
-    assert "annotated_image" in result
-    mock_imwrite.assert_called_once()

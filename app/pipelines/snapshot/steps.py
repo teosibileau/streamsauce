@@ -115,14 +115,11 @@ def annotate_snapshot(
     data = np.frombuffer(response.content, dtype=np.uint8)
     image = cv2.imdecode(data, cv2.IMREAD_COLOR)
 
-    if detection_result["count"] == 0:
-        detections = sv.Detections.empty()
-    else:
-        detections = sv.Detections(
-            xyxy=np.array(detection_result["xyxy"], dtype=np.float32),
-            confidence=np.array(detection_result["confidence"], dtype=np.float32),
-            class_id=np.array(detection_result["class_id"], dtype=np.int32),
-        )
+    detections = sv.Detections(
+        xyxy=np.array(detection_result["xyxy"], dtype=np.float32),
+        confidence=np.array(detection_result["confidence"], dtype=np.float32),
+        class_id=np.array(detection_result["class_id"], dtype=np.int32),
+    )
 
     labels = [
         f"{COCO_CLASS_NAMES.get(cid, str(cid))} {conf:.2f}"  # noqa: E231
